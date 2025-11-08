@@ -12,7 +12,10 @@ Is departure flight traffic more concentrated than return flight traffic around 
 ## Files
 - `notebooks/tsa_holiday_analysis.ipynb` - Complete analysis (run in Colab)
 - `assets/` - Key visualizations from our findings
-- `data/` #add to this later when data is acquired
+- `presentation/` - Slides for our presentation
+
+## Data
+This analysis uses live TSA data. Run the notebook to automatically scrape the latest data from [TSA.gov](https://www.tsa.gov/travel/passenger-volumes).
 
 ## How to Run
 1. Click the "Open in Colab" button above
