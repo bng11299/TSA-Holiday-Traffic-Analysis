@@ -4,7 +4,7 @@
 **Team**: Brendan Ng, Ethan Hanning, Jane Chun  
 **Date**: November 2025
 
-[![Open in Colab](https://colab.research.google.com/drive/18sMJfRHCSZC4JWS2uNrVeHUVsiQwhJvY?authuser=1#scrollTo=RjvwbWR4mlCJ)
+[![Open in Colab](https://colab.research.google.com/drive/18sMJfRHCSZC4JWS2uNrVeHUVsiQwhJvY?usp=sharing)
 
 ## Research Question
 Is departure flight traffic more concentrated than return flight traffic around major US holidays?
