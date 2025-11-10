@@ -4,8 +4,6 @@
 **Team**: Brendan Ng, Ethan Hanning, Jane Chun  
 **Date**: November 2025
 
-[Open in Colab](https://colab.research.google.com/drive/18sMJfRHCSZC4JWS2uNrVeHUVsiQwhJvY?usp=sharing)
-
 ## Research Question
 Is departure flight traffic more concentrated than return flight traffic around major US holidays?
 
@@ -18,7 +16,7 @@ Is departure flight traffic more concentrated than return flight traffic around 
 This analysis uses live TSA data. Run the notebook to automatically scrape the latest data from [TSA.gov](https://www.tsa.gov/travel/passenger-volumes).
 
 ## How to Run
-1. Click the "Open in Colab" button above
+1. Click the [Open in Colab](https://colab.research.google.com/drive/18sMJfRHCSZC4JWS2uNrVeHUVsiQwhJvY?usp=sharing) button
 2. Run cells sequentially - the notebook will scrape live TSA data
 3. See all analysis results and visualizations
 
