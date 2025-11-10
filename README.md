@@ -16,7 +16,7 @@ Is departure flight traffic more concentrated than return flight traffic around 
 This analysis uses live TSA data. Run the notebook to automatically scrape the latest data from [TSA.gov](https://www.tsa.gov/travel/passenger-volumes).
 
 ## How to Run
-1. Click the [Open in Colab](https://colab.research.google.com/drive/18sMJfRHCSZC4JWS2uNrVeHUVsiQwhJvY?usp=sharing) button
+1. [Open the notebook in Colab with this link](https://colab.research.google.com/drive/18sMJfRHCSZC4JWS2uNrVeHUVsiQwhJvY?usp=sharing)
 2. Run cells sequentially - the notebook will scrape live TSA data
 3. See all analysis results and visualizations
 
