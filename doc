@@ -1,0 +1,56 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{amsmath} % For mathematical notation
+\usepackage{booktabs} % For better tables
+
+\title{Analysis of Departure vs. Return Flight Traffic Concentration Around Major US Holidays}
+\author{Brendan Ng, Ethan Hanning, Jane Chun}
+\date{November 2025}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This study investigates whether departure flight traffic is more concentrated than return flight traffic around major US holidays. Using TSA passenger volume data from 2019 to 2024, we analyze traffic patterns around six major holidays by calculating concentration metrics. Our preliminary analysis suggests departure traffic shows greater concentration, with implications for airport operations and travel behavior.
+\end{abstract}
+
+\section{Introduction}
+Air travel during holiday periods shows distinct patterns that impact airport operations and passenger experience. This research addresses the question: \textbf{Is the traffic of departure flights more concentrated than that of return flights around major US holidays?}
+
+We hypothesize that departure traffic will be more concentrated due to travelers needing to arrive for specific holiday events, while return travel may be more dispersed with flexible scheduling.
+
+\section{Methodology}
+
+\subsection{Data Source}
+We use TSA passenger volume data from \texttt{tsa.gov/travel/passenger-volumes}, which covers from 2019 to the current date. However, since the year 2025 is in-progress, we are only going to use complete years, slightly shrinking our window to 2019 to 2024.
+
+\subsection{Analysis Approach}
+\begin{itemize}
+    \item \textbf{Holidays analyzed}: Thanksgiving, Christmas, New Year's Day, July 4th, Memorial Day, Labor Day
+    \item \textbf{Departure Window}: 7 days before through holiday day (Days -7 to 0)
+    \item \textbf{Return Window}: 7 days after holiday (Days +1 to +7)
+    \item \textbf{Concentration Metric}: Coefficient of Variation (CV) = Standard Deviation / Mean
+    \item \textbf{Statistical Test}: Paired t-test comparing departure vs. return CV values
+\end{itemize}
+
+\section{Preliminary Results}
+
+\subsection{Data Collection Status}
+We have successfully collected TSA passenger data and are currently processing holiday windows. Initial data exploration shows clear holiday traffic peaks.
+
+\section{Expected Outcomes}
+Based on initial data inspection, we anticipate finding:
+\begin{itemize}
+    \item Lower CV values for departure windows vs. return windows
+    \item Statistical significance in concentration differences
+    \item Strongest effects for Thanksgiving and Christmas holidays
+\end{itemize}
+
+\section{Discussion}
+
+
+\section{Conclusion}
+This study will provide empirical evidence on holiday travel concentration patterns. Results may help airports optimize resources during peak travel periods.
+
+\end{document}
