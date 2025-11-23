@@ -1,169 +1,260 @@
-\documentclass{article}
-\usepackage{graphicx} % Required for inserting images
-\usepackage{amsmath} % For mathematical notation
-\usepackage{booktabs} % For better tables
+\documentclass[sigconf,10pt]{acmart}
 
-\title{Analysis of Departure vs. Return Flight Traffic Concentration Around Major US Holidays}
-\author{Brendan Ng, Ethan Hanning, Jane Chun}
-\date{November 2024}
+%% --- Metadata (edit these for your class) ---
+\title{Analyzing U.S. Holiday Air Travel: Concentration of Departure vs.\ Return Flight Traffic}
+
+\author{Brendan Ng}
+\affiliation{%
+  \institution{Occidental College}
+  \city{Los Angeles}
+  \state{CA}
+  \country{USA}
+}
+\email{bng@oxy.edu}
+
+\author{Ethan Hanning}
+\affiliation{%
+  \institution{Occidental College}
+  \city{Los Angeles}
+  \state{CA}
+  \country{USA}
+}
+\email{hanning@oxy.edu}
+
+\author{Jane Chun}
+\affiliation{%
+  \institution{Occidental College}
+  \city{Los Angeles}
+  \state{CA}
+  \country{USA}
+}
+\email{jchun3@oxy.edu}
+
+%% Turn off ACM copyright block for class projects
+\settopmatter{printacmref=false}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+\pagestyle{plain}
+
+\acmConference[DS Project '24]{Course Project}{December 2024}{Los Angeles, CA, USA}
+\acmYear{2024}
+
+\usepackage{booktabs}
 
 \begin{document}
 
-\maketitle
-
 \begin{abstract}
-This study investigates whether holiday traffic differs significantly from non-holiday traffic. Using TSA passenger volume data from 2019-2024, we analyze traffic patterns around six major holidays by calculating concentration metrics within ±7-day holiday windows. Our analysis employs non-parametric statistical tests and median-based comparisons to account for travel volatility and pandemic-related disruptions. Preliminary findings suggest asymmetric travel patterns around holidays, with Christmas showing the most significant concentration effects.
+This study asks whether air travel around major U.S.\ holidays differs from non-holiday days and whether departure traffic is more concentrated than return traffic. Using TSA checkpoint passenger volume data from 2019--2024, we build symmetric $\pm 7$-day windows around six major holidays and summarize travel using median passenger volumes and coefficient of variation (CV) metrics. To compare holiday periods to baseline days, we form paired daily samples of holiday-window and non-holiday passenger counts within each year and apply Wilcoxon signed-rank tests. Our descriptive results show modest and asymmetric travel patterns around holidays. However, in this testing framework none of the six holidays show statistically significant differences between holiday-window and non-holiday daily counts at the $\alpha = 0.05$ level. Overall, holiday travel effects are weaker and less universal than common intuition suggests, with the clearest concentration patterns appearing around Thanksgiving.
 \end{abstract}
+
+\maketitle
 
 \section{Introduction}
 
-The analysis of Transportation Security Administration (TSA) passenger volume data provides critical insights into travel patterns surrounding major U.S. holidays. This study examines whether systematic changes in daily passenger volumes occur during holiday periods, challenging conventional assumptions about holiday travel surges. The comprehensive dataset spans 2019-2025, encompassing both pre-pandemic and post-pandemic travel behavior.
+Airports are often thought to be much busier around major holidays, with crowded departure days before the holiday and heavy return traffic afterward. These beliefs affect how travelers plan trips and how agencies like TSA plan staffing at checkpoints.
 
-\section{Methodology}
+In this project, we use Transportation Security Administration (TSA) checkpoint passenger volume data to study travel patterns around major U.S.\ holidays. We focus on two questions:
+\begin{enumerate}
+    \item Are daily passenger counts in the days around major holidays different from daily counts on non-holiday days?
+    \item Is departure traffic (pre-holiday days) more concentrated than return traffic (post-holiday days)?
+\end{enumerate}
 
-\subsection{Data Collection and Processing}
+We look at six holidays that usually matter for travel: New Year's Day, Memorial Day, Independence Day (July 4th), Labor Day, Thanksgiving, and Christmas. For each holiday, we analyze daily TSA throughput in a $\pm 7$-day window from 2019 through 2024. This covers pre-pandemic travel levels, the collapse in 2020, and the rebound and growth in later years.
 
-The analysis employed automated web scraping to collect TSA passenger volume data from official sources, resulting in 2,505 daily observations across the 2019-2025 timeframe. The dataset contains three primary variables for each observation:
+We first describe travel patterns using CVs and medians. Then we use the Wilcoxon signed-rank test on paired daily holiday vs.\ non-holiday counts to see whether holiday windows differ from baseline days in a statistically meaningful way.
+
+\section{Data Collection and Processing}
+
+\subsection{Data Source and Scraping}
+
+We collect daily TSA checkpoint passenger volumes from official TSA web pages using Python's \texttt{requests} and \texttt{BeautifulSoup} libraries. For each year page, we scrape HTML tables listing the date and corresponding passenger throughput. From each row we extract:
 \begin{itemize}
-    \item \textbf{Date}: The specific day of travel
-    \item \textbf{Passenger Count}: The corresponding TSA throughput volume
-    \item \textbf{Source Year}: The calendar year of observation
+    \item \textbf{Date}: calendar date of the observation
+    \item \textbf{Passenger Count}: number of passengers screened at TSA checkpoints
+    \item \textbf{Source Year}: the year associated with the TSA page
 \end{itemize}
 
-\subsection{Holiday Identification and Window Construction}
+Our scraping code targets all available pages from 2019 through 2025. The 2025 page is included in the pipeline so that the code continues working as new data are added. For this analysis, we restrict the data to 2019--2024 and drop 2025 because the year is incomplete.
 
-Six major U.S. holidays were analyzed using rule-based identification:
+\subsection{Cleaning and Date Alignment}
+
+We convert the date strings to \texttt{datetime} objects and sort the rows by date. To check that the series is complete, we build a full sequence of calendar dates from the first to the last observation and align the data to this sequence using \texttt{reindex}. Our cleaning code is able to forward-fill and backward-fill passenger counts for any missing dates, which would keep the time series continuous.
+
+In practice, the TSA daily series for 2019--2024 appears complete, so very little or no imputation is actually needed. We remove any duplicate dates and, when needed, reconstruct the \texttt{source\_year} from the calendar year of the date. The cleaned dataset has one row per day with date, passenger count, year, month, and weekday.
+
+\section{Holiday Identification and Window Construction}
+
+\subsection{Rule-Based Holiday Tagging}
+
+We study six holidays using simple calendar rules:
+
 \begin{itemize}
-    \item \textbf{Fixed-date holidays}: Christmas (December 25), July 4th, New Year's Day (January 1)
-    \item \textbf{Floating holidays}: Memorial Day (last Monday in May), Labor Day (first Monday in September), Thanksgiving (fourth Thursday in November)
+    \item \textbf{Fixed-date holidays}: New Year's Day (January 1), Independence Day (July 4), Christmas (December 25).
+    \item \textbf{Floating holidays}: Memorial Day (last Monday in May), Labor Day (first Monday in September), Thanksgiving (fourth Thursday in November).
 \end{itemize}
 
-Holiday windows were constructed to capture relevant travel periods, typically encompassing 10 days before and after each holiday. Each observation was labeled with the corresponding holiday name or designated as "None" for baseline non-holiday periods.
+For each date, we compute its year, month, day, and weekday (Monday=0,\dots,Sunday=6) and apply these rules to assign a holiday label (\texttt{holiday\_name}). Dates that are not holidays are labeled as \texttt{None} and treated as non-holiday baseline days.
 
-\subsection{Statistical Analysis Framework}
+\subsection{Holiday Windows and Departure vs.\ Return Periods}
 
-The analysis employed a dual-methodology approach:
+For each holiday \(H\) and year \(y\) from 2019--2024, we build a window centered on the holiday date. The window includes seven days before and seven days after, giving 15 days with offsets \(-7, -6, \dots, 0, \dots, +6, +7\), where day 0 is the holiday itself.
 
-\subsubsection{Descriptive Analysis}
-Visual and statistical examination of travel concentration patterns using coefficient of variation (CV) metrics:
+Within each holiday window we define:
+\begin{itemize}
+    \item \textbf{Departure window}: days \(-7\) through \(0\). These represent pre-holiday and same-day departures.
+    \item \textbf{Return window}: days \(+1\) through \(+7\). These represent post-holiday returns.
+\end{itemize}
+
+For every holiday, year, and day offset, we match the corresponding daily passenger count. This allows us to plot how travel behaves around the holiday and compare departure and return patterns across years.
+
+\section{Statistical Analysis}
+
+\subsection{Descriptive Metrics}
+
+\subsubsection{Coefficient of Variation}
+
+For each holiday \(H\) and year \(y\), we compute the coefficient of variation (CV) for both the departure and return windows:
 \begin{equation}
-CV = \frac{\sigma}{\mu}
+CV = \frac{\sigma}{\mu},
 \end{equation}
-where lower CV values indicate more concentrated travel patterns.
+where \(\sigma\) is the standard deviation of daily passenger counts in the window and \(\mu\) is the mean. A lower CV means the daily values are more similar to each other, which indicates more concentration.
 
-\subsubsection{Statistical Significance Testing}
-The Wilcoxon signed-rank test was selected as the appropriate non-parametric test due to:
+We also compute pooled CVs across all years for each holiday and window. For Thanksgiving, these pooled CVs are shown in Section~\ref{sec:results}.
+
+\subsubsection{Medians and Percent Change}
+
+To compare holiday windows to typical non-holiday days, we use medians rather than means so that extreme spikes do not dominate the averages. For each holiday \(H\) and year \(y\), we compute:
 \begin{itemize}
-    \item Paired nature of holiday and baseline observations within the same year
-    \item Non-normal distribution of passenger count data
-    \item Robustness to outliers and non-parametric assumptions
+    \item the median daily passenger count in the \(\pm 7\)-day window, and
+    \item the median daily passenger count on all non-holiday days within the same overall period.
 \end{itemize}
 
-For each holiday, paired samples were created by matching holiday-period passenger counts with an equal number of baseline days from the same calendar year, effectively controlling for year-level effects including long-term growth trends and pandemic-related disruptions.
+We also compute percent change between median holiday-window counts and the overall non-holiday median for descriptive plots. These summaries are used to show which holidays tend to have higher typical traffic than non-holiday days.
+
+\subsection{Wilcoxon Signed-Rank Test on Daily Values}
+
+To formally test whether holiday-period counts differ from non-holiday counts, we use the Wilcoxon signed-rank test with paired daily values.
+
+For each holiday (e.g., Christmas), we do the following:
+\begin{enumerate}
+    \item Within each year, we collect all daily passenger counts in the holiday window that are labeled with that holiday.
+    \item Within the same year, we collect daily passenger counts for non-holiday days labeled \texttt{None}.
+    \item We let \(n\) be the smaller of the two counts and keep the first \(n\) days from each group in that year (using the original date order).
+    \item We stack these paired daily values across all years to form two samples of equal length: one sample of holiday-period daily counts and one sample of baseline daily counts.
+\end{enumerate}
+
+We then apply the Wilcoxon signed-rank test to these paired daily values for each holiday. This test is suitable because:
+\begin{itemize}
+    \item It compares paired observations (holiday vs.\ baseline) without assuming normality.
+    \item TSA passenger counts are skewed and can have large outliers, so a rank-based non-parametric test is more robust than a simple paired t-test.
+\end{itemize}
+
+We use the conventional significance level \(\alpha = 0.05\). If the p-value is less than 0.05, we would conclude that the holiday period differs systematically from the baseline. Otherwise, we treat any differences as within the range of normal variation.
 
 \section{Results}
+\label{sec:results}
 
 \subsection{Travel Concentration Patterns}
 
-The descriptive analysis revealed modest concentration patterns, particularly around Thanksgiving:
+Plots aligned by days from each holiday show clear seasonal patterns and different shapes for each holiday. Thanksgiving has a strong departure wave in the days before the holiday and a visible return wave afterwards. Christmas travel is more spread out, and summer holidays show smaller bumps on top of an already busy summer baseline.
+
+To look directly at concentration for Thanksgiving, we compute pooled CVs across all years for departures and returns:
 
 \begin{table}[h]
 \centering
-\caption{Thanksgiving Travel Concentration Metrics}
+\caption{Thanksgiving Travel Concentration Metrics (2019--2024)}
 \begin{tabular}{lcc}
-\hline
+\toprule
 \textbf{Period} & \textbf{Coefficient of Variation} & \textbf{Interpretation} \\
-\hline
+\midrule
 Departure Window & 0.3035 & More concentrated \\
-Return Window & 0.3051 & Less concentrated \\
-\hline
+Return Window    & 0.3051 & Less concentrated \\
+\bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Statistical Significance Testing}
+The difference is small, but it supports the idea that departures are slightly more tightly packed into a narrow set of days, while returns are spread out a bit more.
 
-The Wilcoxon signed-rank test results across all six holidays showed no statistically significant differences:
+For the other holidays, departure and return CVs are closer together and show weaker asymmetry.
+
+\subsection{Wilcoxon Signed-Rank Test Results}
+
+We next look at the Wilcoxon signed-rank test results for each holiday. Table~\ref{tab:wilcoxon} shows the p-values and whether the results are statistically significant at \(\alpha = 0.05\).
 
 \begin{table}[h]
 \centering
-\caption{Wilcoxon Signed-Rank Test Results for Holiday vs. Baseline Periods}
+\caption{Wilcoxon Signed-Rank Test Results for Holiday vs.\ Baseline Periods}
+\label{tab:wilcoxon}
 \begin{tabular}{lcc}
-\hline
+\toprule
 \textbf{Holiday} & \textbf{p-value} & \textbf{Statistical Significance} \\
-\hline
-Christmas & 0.966 & Not significant \\
-Thanksgiving & 0.114 & Not significant \\
-July 4th & 0.288 & Not significant \\
-New Year's Day & 0.903 & Not significant \\
-Memorial Day & 0.157 & Not significant \\
-Labor Day & 0.733 & Not significant \\
-\hline
+\midrule
+Christmas       & 0.966 & Not significant \\
+Thanksgiving    & 0.114 & Not significant \\
+July 4th        & 0.288 & Not significant \\
+New Year's Day  & 0.903 & Not significant \\
+Memorial Day    & 0.157 & Not significant \\
+Labor Day       & 0.733 & Not significant \\
+\bottomrule
 \end{tabular}
 \end{table}
 
-None of the p-values approached the conventional significance threshold of $\alpha = 0.05$, indicating that observed differences between holiday and baseline passenger counts fall within the range of normal fluctuation.
+In this testing setup, none of the holidays show p-values below 0.05. Even though some holidays, especially Thanksgiving and Christmas, look busier in the plots and have higher medians, the Wilcoxon test suggests that these differences are not large enough, or not consistent enough, to be statistically significant given the way we formed the paired samples.
 
 \section{Discussion}
 
 \subsection{Interpretation of Findings}
 
-The consistent absence of statistically significant holiday effects challenges conventional wisdom about systematic travel surges during major holidays. Several factors may contribute to these findings:
+Our results suggest that the simple story of ``huge holiday spikes'' is too strong at the national level, at least in this dataset and testing framework.
 
-\subsubsection{Temporal Trend Dominance}
-Broader temporal patterns, including the dramatic COVID-19 impact visible in 2020-2021 data, may overshadow short-term holiday effects. The pandemic created natural experimental conditions that revealed remarkable stability in relative holiday travel patterns despite absolute volume changes.
-
-\subsubsection{Distributed Travel Behavior}
-Modern travel patterns may be more distributed around holidays rather than concentrated on specific days, potentially due to:
 \begin{itemize}
-    \item Flexible work arrangements enabling extended travel periods
-    \item Strategic traveler behavior avoiding peak travel days
-    \item Diverse celebration timing across demographic groups
+    \item Holidays like Thanksgiving and Christmas do show clear patterns and often higher daily counts than typical days in the same season, especially in the descriptive plots and medians.
+    \item However, once we compare paired daily values of holiday-window and non-holiday counts using the Wilcoxon signed-rank test, none of the holidays show statistically significant differences at \(\alpha = 0.05\).
+    \item Summer holidays take place during a busy travel season, so their extra effect on top of the baseline is modest.
 \end{itemize}
 
-\subsubsection{Methodological Considerations}
-The analysis controlled for year-level effects through careful paired sampling design, enhancing the reliability of negative findings. The use of non-parametric statistics provides robustness against distributional assumptions and outliers.
+The CV comparison for Thanksgiving supports the idea that departures are slightly more concentrated than returns. For other holidays, the difference between departure and return concentration is less clear.
 
 \subsection{Limitations}
 
+There are several limitations to this analysis:
 \begin{itemize}
-    \item \textbf{Temporal Scope}: The 2019-2025 timeframe, while comprehensive, may not capture longer-term evolutionary patterns in holiday travel behavior
-    \item \textbf{Aggregation Level}: National-level data may mask regional variations in holiday travel patterns
-    \item \textbf{External Factors}: The analysis cannot account for confounding variables such as weather events, economic conditions, or special events
-    \item \textbf{Granularity}: Daily aggregates may obscure within-day patterns and timing effects
+    \item \textbf{Time period}: The years 2019--2024 include the COVID-19 shock and recovery, which may not represent typical long-run patterns.
+    \item \textbf{Pairing method}: In the Wilcoxon test, baseline days are chosen within each year and paired by simple order (\texttt{head(n)}). We do not match by weekday or month in this older test design, which might reduce sensitivity.
+    \item \textbf{Aggregation}: TSA counts are national totals and may hide strong regional differences.
+    \item \textbf{Possible imputation}: The cleaning pipeline can fill missing dates, but the raw TSA series appears nearly complete, so any filled values are likely rare.
 \end{itemize}
+
+\section*{Future Research Directions}
+
+There are several natural extensions of this work:
+
+\begin{itemize}
+    \item \textbf{Regional analysis}: Investigate geographic differences in holiday travel patterns, for example by comparing large hubs, regional airports, and different U.S.\ regions.
+    \item \textbf{Multi-year evolution}: Examine whether holiday effects are emerging or shrinking over longer time horizons, beyond 2019--2024.
+    \item \textbf{Behavioral studies}: Complement aggregate TSA data with traveler surveys or qualitative interviews to understand how people choose departure and return days.
+    \item \textbf{External factor integration}: Incorporate economic indicators, weather events, and special events (e.g., major sports or political events) into models of daily passenger volume.
+\end{itemize}
+
+The basic framework in this analysis---automated data collection, descriptive time-window analytics, and non-parametric testing of holiday effects---can be reused and extended to monitor travel patterns over time and to test more detailed hypotheses about holiday travel behavior.
 
 \section{Conclusion and Implications}
 
-This comprehensive analysis demonstrates that major U.S. holidays do not produce statistically significant deviations in TSA passenger volumes compared to baseline periods. The findings suggest that holiday travel behavior is more consistent and less surge-prone than commonly assumed.
+Using TSA checkpoint data from 2019--2024, we studied how air travel behaves around major U.S.\ holidays. We looked at both concentration patterns and statistical differences between holiday windows and non-holiday days.
 
-\subsection{Practical Applications}
-
-\subsubsection{Transportation Planning}
-The absence of strong holiday effects supports:
+Our main takeaways are:
 \begin{itemize}
-    \item More stable resource allocation models for airport security operations
-    \item Reduced need for extreme capacity adjustments during holiday periods
-    \item Potential optimization of staffing and operational planning
+    \item Descriptively, holidays such as Thanksgiving and Christmas show higher volumes and clear shapes in the days before and after the holiday.
+    \item In the Wilcoxon signed-rank tests on paired daily values, none of the six holidays show statistically significant differences between holiday-window and non-holiday counts at the 0.05 level.
+    \item Thanksgiving departures appear slightly more concentrated than returns, but this pattern is small and mainly descriptive.
 \end{itemize}
 
-\subsubsection{Industry Implications}
-Travel industry stakeholders can leverage these insights for:
-\begin{itemize}
-    \item More accurate demand forecasting and pricing strategies
-    \item Improved inventory management and capacity planning
-    \item Enhanced customer service planning and resource allocation
-\end{itemize}
+For TSA and airport planners, these results suggest that some holidays, especially Thanksgiving, deserve attention due to their clear patterns, but that national total volumes do not always show large, statistically strong deviations from non-holiday days. Local or airport-specific analyses might show stronger effects than the national aggregate.
 
-\subsection{Future Research Directions}
+\section*{References}
 
 \begin{itemize}
-    \item \textbf{Regional Analysis}: Investigate geographic variations in holiday travel patterns
-    \item \textbf{Multi-year Evolution}: Examine whether holiday effects are emerging or diminishing over longer time horizons
-    \textbf{Behavioral Studies}: Complement quantitative findings with traveler surveys and qualitative insights
-    \item \textbf{External Factor Integration}: Incorporate economic indicators, weather data, and special events into predictive models
+    \item Transportation Security Administration. ``TSA checkpoint travel numbers (current year versus prior year(s)).'' Available at \url{https://www.tsa.gov/travel/passenger-volumes}. Accessed November 2024.
 \end{itemize}
 
-The methodological framework established in this analysis—combining robust data collection, descriptive analytics, and rigorous statistical testing—provides a foundation for ongoing monitoring of travel patterns and challenges conventional assumptions about holiday travel behavior.
 
 \end{document}
-
