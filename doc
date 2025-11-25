@@ -150,6 +150,26 @@ We then apply the Wilcoxon signed-rank test to these paired daily values for eac
 
 We use the conventional significance level \(\alpha = 0.05\). If the p-value is less than 0.05, we would conclude that the holiday period differs systematically from the baseline. Otherwise, we treat any differences as within the range of normal variation.
 
+\subsection{Levene's Test for Departure vs.\ Return Concentration}
+
+To address our second research question---whether departure traffic (pre-holiday days) is more concentrated than return traffic (post-holiday days)---we apply Levene's test for equality of variances. Because concentration corresponds to lower variability, this test directly evaluates whether the variance of pre-holiday passenger counts differs from that of post-holiday counts.
+
+For each holiday, we construct two samples:
+\begin{itemize}
+    \item \textbf{Pre-holiday sample}: daily passenger counts from days $-7$ through $0$ relative to the holiday.
+    \item \textbf{Post-holiday sample}: daily passenger counts from days $+1$ through $+7$.
+\end{itemize}
+
+Levene's test evaluates
+\[
+H_0: \sigma_{\text{pre}}^2 = \sigma_{\text{post}}^2
+\qquad\text{vs.}\qquad
+H_A: \sigma_{\text{pre}}^2 \neq \sigma_{\text{post}}^2,
+\]
+with significance level $\alpha = 0.05$. Because TSA passenger counts are highly seasonal, skewed, and often exhibit extreme outliers, a variance-comparison test that does not assume normality is appropriate here.
+
+Across all six holidays, the Levene statistics are small and the p-values well exceed $0.05$, indicating no evidence that the two variances differ. Table~\ref{tab:levene} summarizes these results.
+
 \section{Results}
 \label{sec:results}
 
@@ -161,6 +181,7 @@ To look directly at concentration for Thanksgiving, we compute pooled CVs across
 
 \begin{table}[h]
 \centering
+\small % or \footnotesize
 \caption{Thanksgiving Travel Concentration Metrics (2019--2024)}
 \begin{tabular}{lcc}
 \toprule
@@ -171,6 +192,7 @@ Return Window    & 0.3051 & Less concentrated \\
 \bottomrule
 \end{tabular}
 \end{table}
+
 
 The difference is small, but it supports the idea that departures are slightly more tightly packed into a narrow set of days, while returns are spread out a bit more.
 
@@ -184,21 +206,51 @@ We next look at the Wilcoxon signed-rank test results for each holiday. Table~\r
 \centering
 \caption{Wilcoxon Signed-Rank Test Results for Holiday vs.\ Baseline Periods}
 \label{tab:wilcoxon}
-\begin{tabular}{lcc}
+\begin{tabular}{l S[table-format=3.0] S[table-format=1.3] l}
 \toprule
-\textbf{Holiday} & \textbf{p-value} & \textbf{Statistical Significance} \\
+\textbf{Holiday} & 
+\textbf{Wilcoxon Statistic} & 
+\textbf{p-value} & 
+\textbf{Interpretation} \\
 \midrule
-Christmas       & 0.966 & Not significant \\
-Thanksgiving    & 0.114 & Not significant \\
-July 4th        & 0.288 & Not significant \\
-New Year's Day  & 0.903 & Not significant \\
-Memorial Day    & 0.157 & Not significant \\
-Labor Day       & 0.733 & Not significant \\
+Christmas       & 84  & 0.966 & Not significant \\
+Thanksgiving    & 173 & 0.114 & Not significant \\
+July 4th        & 84  & 0.288 & Not significant \\
+New Year's Day  & 50  & 0.903 & Not significant \\
+Memorial Day    & 74  & 0.157 & Not significant \\
+Labor Day       & 105 & 0.733 & Not significant \\
 \bottomrule
 \end{tabular}
 \end{table}
 
+
 In this testing setup, none of the holidays show p-values below 0.05. Even though some holidays, especially Thanksgiving and Christmas, look busier in the plots and have higher medians, the Wilcoxon test suggests that these differences are not large enough, or not consistent enough, to be statistically significant given the way we formed the paired samples.
+
+\subsection{Interpretation of the Levene Results}
+
+\begin{table}[h]
+\centering
+\caption{Levene's Test Results for Pre-Holiday vs.\ Post-Holiday Variances}
+\label{tab:levene}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Holiday} & \textbf{Levene Stat.} & \textbf{p-value} & \textbf{Interpretation} \\
+\midrule
+Christmas      & 0.0005 & 0.983 & No variance diff \\
+Thanksgiving   & 1.6592 & 0.199 & No variance diff \\
+July~4th       & 0.0520 & 0.820 & No variance diff \\
+New~Year's     & 0.6489 & 0.423 & No variance diff \\
+Memorial~Day   & 0.2392 & 0.626 & No variance diff \\
+Labor~Day      & 1.0764 & 0.302 & No variance diff \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The Levene test results indicate that, for every holiday studied, the variability of passenger volumes in the departure window is statistically indistinguishable from the variability in the return window. Although the raw variances differ numerically for some holidays (e.g., Thanksgiving shows higher post-holiday variance than pre-holiday variance), these differences are far from statistically significant.
+
+This means that, in the national TSA dataset, there is no detectable asymmetry in how tightly packed departure versus return days are around holidays. Even holidays with well-known travel patterns such as Thanksgiving show no significant variance difference once we aggregate across all U.S.\ airports and all years from 2019--2024.
+
+In short, while descriptive plots and CV summaries suggest that departure traffic may appear slightly more concentrated for certain holidays, particularly Thanksgiving, the formal variance comparison finds no statistically supported difference between pre-holiday and post-holiday volatility. Any departure–return asymmetry is either too small or too inconsistent across years to be detected in the national aggregate.
 
 \section{Discussion}
 
