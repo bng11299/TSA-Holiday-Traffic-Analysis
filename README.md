@@ -26,4 +26,4 @@ This analysis uses live TSA data. Run the notebook to automatically scrape the l
 - Consistent pattern observed for Thanksgiving, Christmas, and July 4th
 
 ## Final Report
-See our complete research paper on Overleaf: []#will add link later
+See our complete research paper on Overleaf: (https://www.overleaf.com/read/cpcttvfrzgbn#c9f614)
